@@ -28,13 +28,13 @@ namespace FormsPdfApp.Pdf
                         .PaddingBottom(10)
                         .Height(120)
                         .AlignCenter()
-                        .Element(Header =>
+                        .Element(header =>
                         {
-                            Header.Row(row =>
+                            header.Row(row =>
                             {
-                                row.RelativeColumn()
+                                row.RelativeItem()
                                     .Height(120)
-                                    .Image(letter, ImageScaling.Fit);
+                                    .Image(letter);
                             });
                         });
 
@@ -53,16 +53,16 @@ namespace FormsPdfApp.Pdf
                         // Row 1 - Container & Shipper Details
                         col.Item().PaddingTop(5).Row(r =>
                         {
-                            // LEFT Column
-                            r.RelativeColumn().Column(c1 =>
+                            // LEFT side
+                            r.RelativeItem().Column(c1 =>
                             {
                                 c1.Item().Text($"Container No: {s.ContainerNo}");
                                 c1.Item().Text($"Set Temp: {s.Temperature}");
                                 c1.Item().Text($"Humidity: {s.Humidity}");
                             });
 
-                            // RIGHT Column
-                            r.ConstantColumn(200).Column(c2 =>
+                            // RIGHT side
+                            r.ConstantItem(200).Column(c2 =>
                             {
                                 c2.Item().Text($"Shipper: {c.Shipper}");
                                 c2.Item().Text($"Forwarder: {c.Forwarder}");
@@ -89,7 +89,7 @@ namespace FormsPdfApp.Pdf
                             col.Item()
                                 .Height(60)
                                 .Width(120)
-                                .Image(sign, ImageScaling.Fit);
+                                .Image(sign);
                         });
                 });
             });
