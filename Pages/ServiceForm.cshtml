@@ -1,0 +1,19 @@
+@page
+@model ServiceFormModel
+@{
+    Layout = "_Layout.cshtml";
+}
+<h2>Service Details</h2>
+
+<form method="post" asp-page-handler="Save">
+    <label>Container No</label><br/>
+    <input name="ContainerNo" /><br/>
+
+    <label>Temperature</label><br/>
+    <input name="Temperature" /><br/>
+
+    <label>Humidity</label><br/>
+    <input name="Humidity" /><br/><br/>
+
+    <button type="submit">Save & Next</button>
+</form>

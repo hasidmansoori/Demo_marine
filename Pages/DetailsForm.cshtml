@@ -1,0 +1,28 @@
+@page
+@model DetailsFormModel
+@{
+    Layout = "_Layout.cshtml";
+}
+<h2>Survey / Excel-like Details</h2>
+
+<form method="post" asp-page-handler="Save">
+    <label>Refrigeration Unit (Out Side)</label><br/>
+    <select name="ReeferUnit">
+        <option>IN GOOD ORDER</option>
+        <option>NOT FOUND</option>
+    </select><br/>
+
+    <label>Outside Doors</label><br/>
+    <select name="OutsideDoors">
+        <option>IN GOOD ORDER</option>
+        <option>DAMAGED</option>
+    </select><br/>
+
+    <label>Ventilation Unit</label><br/>
+    <select name="VentilationUnit">
+        <option>IN GOOD ORDER & WORKING PROPERLY</option>
+        <option>NOT WORKING</option>
+    </select><br/><br/>
+
+    <button type="submit">Save & Generate PDF</button>
+</form>
