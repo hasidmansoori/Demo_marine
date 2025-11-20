@@ -155,46 +155,56 @@ export default async function generatePdf(data, images=[]){
   }
 
   // image grid unlimited
-  // ----------------------------
-// 🔥 2-COLUMN IMAGE GRID WITH TITLES
+// ----------------------------
+// 🔥 FIXED: TRUE UNLIMITED IMAGES (2 PER ROW)
 // ----------------------------
 const IMG_W = 160;
 const IMG_H = 120;
 const GAP_X = 20;
-const GAP_Y = 30;
-const COLS = 2;
+const GAP_Y = 35;
+const COLS = 2;        // 2 images per row
 
 if (images.length > 0) {
-  let col = 0;
 
   for (let i = 0; i < images.length; i++) {
     const imgObj = images[i];
     const imgTitle = imgObj.title || "";
 
-    if (col === COLS) {
-      col = 0;
-      cursorY -= IMG_H + GAP_Y;
+    const col = i % COLS;
+    const isFirstInRow = col === 0;
+
+    // Before starting a NEW ROW (every 2 images), reduce cursor
+    if (isFirstInRow && i !== 0) {
+      cursorY -= IMG_H + GAP_Y;   // go down for next row
     }
 
+    // Page break if not enough height
     if (cursorY - IMG_H < BOTTOM_LIMIT) {
-      page = createPage();
+      page = createPage();        // new page with letterhead
       cursorY = pageHeight - TOP_START;
-      col = 0;
     }
 
+    // compute x, y positions
     const xPos = LEFT + col * (IMG_W + GAP_X);
     const yPos = cursorY - IMG_H;
 
     try {
       const ab = await imgObj.file.arrayBuffer();
       const emb = await pdfDoc.embedPng(ab);
-      page.drawImage(emb, { x: xPos, y: yPos, width: IMG_W, height: IMG_H });
+
+      // Draw the image
+      page.drawImage(emb, {
+        x: xPos,
+        y: yPos,
+        width: IMG_W,
+        height: IMG_H,
+      });
 
       // Draw title above image
       if (imgTitle.trim() !== "") {
         page.drawText(imgTitle, {
           x: xPos,
-          y: yPos + IMG_H + 6,
+          y: yPos + IMG_H + 5,
           size: 8,
           font: helveticaBold,
           color: rgb(0, 0, 0),
@@ -202,14 +212,14 @@ if (images.length > 0) {
       }
 
     } catch (err) {
-      console.warn("Image failed:", err);
+      console.warn("Image load failed:", err);
     }
-
-    col++;
   }
 
-  cursorY -= IMG_H + GAP_Y;
+  // After final row, move cursor down
+  cursorY -= IMG_H + 20;
 }
+
 
 
   const pdfBytes = await pdfDoc.save();
