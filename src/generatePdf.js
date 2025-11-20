@@ -155,7 +155,7 @@ export default async function generatePdf(data, images=[]){
   }
 
   // image grid unlimited
-  const IMG_W = 140; const IMG_H = 100; const GAP_X = 20; const GAP_Y = 20; const COLS = 3;
+  const IMG_W = 140; const IMG_H = 100; const GAP_X = 20; const GAP_Y = 20; const COLS = 2;
   const imageBufs = [];
   for(const img of images){
     try{
