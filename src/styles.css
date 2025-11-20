@@ -399,4 +399,14 @@ button{background:#2b7cff;color:#fff;padding:10px 14px;border:0;border-radius:6p
   .logout-item button:hover {
     background: rgba(239,68,68,0.35);
   }
+
+.img-title-input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+}
+
   
