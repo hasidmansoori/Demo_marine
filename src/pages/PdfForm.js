@@ -169,38 +169,67 @@ export default function PdfForm() {
             </label>
 
             {/* IMAGE UPLOAD */}
-            <div className="image-section">
-              <h3>Upload Images</h3>
+            {/* IMAGE UPLOAD */}
+<div className="image-section">
+  <h3>Upload Images</h3>
 
-              <button
-                className="add-img-btn"
-                onClick={() => document.getElementById("imgInput").click()}
-              >
-                + Add Image
-              </button>
+  <button
+    className="add-img-btn"
+    onClick={() => document.getElementById("imgInput").click()}
+  >
+    + Add Image
+  </button>
 
-              <input
-                id="imgInput"
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  const files = Array.from(e.target.files);
-                  setImages([...imageFiles, ...files]);
-                }}
-              />
+  <input
+    id="imgInput"
+    type="file"
+    accept="image/*"
+    style={{ display: "none" }}
+    onChange={(e) => {
+      const files = Array.from(e.target.files);
 
-              <div className="img-grid">
-                {imageFiles.map((file, i) => (
-                  <div className="img-box" key={i}>
-                    <img src={URL.createObjectURL(file)} alt="" />
-                    <button className="remove-img" onClick={() =>
-                      setImages(imageFiles.filter((_, idx) => idx !== i))
-                    }>✕</button>
-                  </div>
-                ))}
-              </div>
-            </div>
+      const withTitles = files.map((f) => ({
+        file: f,
+        title: "",
+      }));
+
+      setImages([...imageFiles, ...withTitles]);
+    }}
+  />
+
+  {/* 2 Images Per Row Grid */}
+  <div className="img-grid">
+    {imageFiles.map((imgObj, i) => (
+      <div className="img-box" key={i}>
+        <img src={URL.createObjectURL(imgObj.file)} alt="preview" />
+
+        {/* Title Input */}
+        <input
+          type="text"
+          placeholder="Enter image title"
+          className="img-title-input"
+          value={imgObj.title}
+          onChange={(e) => {
+            const updated = [...imageFiles];
+            updated[i].title = e.target.value;
+            setImages(updated);
+          }}
+        />
+
+        {/* Remove Button */}
+        <button
+          className="remove-img"
+          onClick={() =>
+            setImages(imageFiles.filter((_, idx) => idx !== i))
+          }
+        >
+          ✕
+        </button>
+      </div>
+    ))}
+  </div>
+</div>
+
 
             <div className="actions">
               <button className="btn back" onClick={() => setStep(2)}>← Back</button>
