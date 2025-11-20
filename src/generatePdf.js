@@ -6,8 +6,8 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
   If you move images into your app's public/images, change to:
     const LETTERHEAD_URL = process.env.PUBLIC_URL + "/images/LETTER_HEAD.png";
 */
-const LETTERHEAD_URL = "/images/LETTER_HEAD.png";
-const SIGNATURE_URL = "/images/signature_owner.png";
+const LETTERHEAD_URL = process.env.PUBLIC_URL + "/images/LETTER_HEAD.png";
+const SIGNATURE_URL  = process.env.PUBLIC_URL + "/images/signature_owner.png";
 
 /**
  * helper: fetch ArrayBuffer from url
