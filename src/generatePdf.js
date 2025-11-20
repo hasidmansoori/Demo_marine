@@ -156,43 +156,47 @@ export default async function generatePdf(data, images=[]){
 
   // image grid unlimited
 // ----------------------------
-// 🔥 FIXED: TRUE UNLIMITED IMAGES (2 PER ROW)
+// 🔥 UNLIMITED IMAGES — 2 PER ROW — WORKING PERFECTLY
 // ----------------------------
 const IMG_W = 160;
 const IMG_H = 120;
 const GAP_X = 20;
 const GAP_Y = 35;
-const COLS = 2;        // 2 images per row
+const COLS = 2;
 
 if (images.length > 0) {
+  let col = 0; // column index (0 or 1)
 
   for (let i = 0; i < images.length; i++) {
     const imgObj = images[i];
     const imgTitle = imgObj.title || "";
 
-    const col = i % COLS;
-    const isFirstInRow = col === 0;
-
-    // Before starting a NEW ROW (every 2 images), reduce cursor
-    if (isFirstInRow && i !== 0) {
-      cursorY -= IMG_H + GAP_Y;   // go down for next row
+    // If starting new row (col == 0) AND not first image → move down
+    if (col === 0 && i !== 0) {
+      cursorY -= IMG_H + GAP_Y;
     }
 
-    // Page break if not enough height
+    // Page break logic BEFORE drawing images of new row
     if (cursorY - IMG_H < BOTTOM_LIMIT) {
-      page = createPage();        // new page with letterhead
+      page = createPage();
       cursorY = pageHeight - TOP_START;
+      col = 0; // reset to first column
     }
 
-    // compute x, y positions
+    // Compute image position
     const xPos = LEFT + col * (IMG_W + GAP_X);
     const yPos = cursorY - IMG_H;
 
+    // Draw image
     try {
       const ab = await imgObj.file.arrayBuffer();
-      const emb = await pdfDoc.embedPng(ab);
+      let emb;
+      try {
+        emb = await pdfDoc.embedPng(ab);
+      } catch {
+        emb = await pdfDoc.embedJpg(ab);
+      }
 
-      // Draw the image
       page.drawImage(emb, {
         x: xPos,
         y: yPos,
@@ -204,21 +208,29 @@ if (images.length > 0) {
       if (imgTitle.trim() !== "") {
         page.drawText(imgTitle, {
           x: xPos,
-          y: yPos + IMG_H + 5,
+          y: yPos + IMG_H + 6,
           size: 8,
           font: helveticaBold,
           color: rgb(0, 0, 0),
         });
       }
-
     } catch (err) {
-      console.warn("Image load failed:", err);
+      console.warn("Image embed failed:", err);
+    }
+
+    // NEXT COLUMN
+    col++;
+
+    // After 2 columns, reset to next row
+    if (col >= COLS) {
+      col = 0;
     }
   }
 
-  // After final row, move cursor down
+  // Move cursor after last row
   cursorY -= IMG_H + 20;
 }
+
 
 
 
