@@ -1,4 +1,4 @@
-name: Build and Deploy .NET App
+name: Build and Deploy React App
 
 on:
   push:
@@ -17,21 +17,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          dotnet-version: "8.0.x"
+          node-version: "18"
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Install dependencies
+        run: npm install
 
-      - name: Publish project
-        run: dotnet publish -c Release -o output
+      - name: Build React project
+        run: npm run build
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: output/wwwroot
+          path: ./build   # IMPORTANT: React build output
 
   deploy:
     runs-on: ubuntu-latest
