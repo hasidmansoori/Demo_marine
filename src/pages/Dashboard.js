@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./dashboard.css";
+import "../styles.css";
 
 export default function Dashboard() {
   const [time, setTime] = useState("");
