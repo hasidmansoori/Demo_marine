@@ -33,7 +33,7 @@ export default function Dashboard() {
 
         <button
           className="dash-btn"
-          onClick={() => (window.location.href = "/pdf-form")}
+          onClick={() => (window.location.href = "/Demo_marine/#/pdf-form")}
         >
           Generate PDF →
         </button>
