@@ -155,50 +155,62 @@ export default async function generatePdf(data, images=[]){
   }
 
   // image grid unlimited
-  const IMG_W = 140; const IMG_H = 100; const GAP_X = 20; const GAP_Y = 20; const COLS = 2;
-  const imageBufs = [];
-  for(const img of images){
-    try{
-      if(typeof img === "string"){
-        if(img.startsWith("data:")){
-          const base64 = img.split(",")[1];
-          const bytes = atob(base64);
-          const buf = new Uint8Array(bytes.length);
-          for(let i=0;i<bytes.length;i++) buf[i]=bytes.charCodeAt(i);
-          imageBufs.push(buf);
-        } else {
-          const ab = await fetchArrayBuffer(img);
-          imageBufs.push(ab);
-        }
-      } else if(img instanceof File){
-        const ab = await img.arrayBuffer();
-        imageBufs.push(ab);
+  // ----------------------------
+// 🔥 2-COLUMN IMAGE GRID WITH TITLES
+// ----------------------------
+const IMG_W = 160;
+const IMG_H = 120;
+const GAP_X = 20;
+const GAP_Y = 30;
+const COLS = 2;
+
+if (images.length > 0) {
+  let col = 0;
+
+  for (let i = 0; i < images.length; i++) {
+    const imgObj = images[i];
+    const imgTitle = imgObj.title || "";
+
+    if (col === COLS) {
+      col = 0;
+      cursorY -= IMG_H + GAP_Y;
+    }
+
+    if (cursorY - IMG_H < BOTTOM_LIMIT) {
+      page = createPage();
+      cursorY = pageHeight - TOP_START;
+      col = 0;
+    }
+
+    const xPos = LEFT + col * (IMG_W + GAP_X);
+    const yPos = cursorY - IMG_H;
+
+    try {
+      const ab = await imgObj.file.arrayBuffer();
+      const emb = await pdfDoc.embedPng(ab);
+      page.drawImage(emb, { x: xPos, y: yPos, width: IMG_W, height: IMG_H });
+
+      // Draw title above image
+      if (imgTitle.trim() !== "") {
+        page.drawText(imgTitle, {
+          x: xPos,
+          y: yPos + IMG_H + 6,
+          size: 8,
+          font: helveticaBold,
+          color: rgb(0, 0, 0),
+        });
       }
-    }catch(e){ console.warn("skip image",e); }
+
+    } catch (err) {
+      console.warn("Image failed:", err);
+    }
+
+    col++;
   }
 
-  if(imageBufs.length>0){
-    let col=0; let row=0;
-    for(let i=0;i<imageBufs.length;i++){
-      if(col===COLS){ col=0; row++; }
-      const required = IMG_H + GAP_Y;
-      if(cursorY - required < BOTTOM_LIMIT){
-        page = createPage(); cursorY = pageHeight - TOP_START; col=0; row=0;
-      }
-      const xPos = LEFT + col*(IMG_W+GAP_X);
-      const yPos = cursorY - IMG_H;
-      try{
-        const emb = await pdfDoc.embedPng(imageBufs[i]);
-        page.drawImage(emb,{x:xPos,y:yPos,width:IMG_W,height:IMG_H});
-      }catch(err){
-        try{ const emb = await pdfDoc.embedJpg(imageBufs[i]); page.drawImage(emb,{x:xPos,y:yPos,width:IMG_W,height:IMG_H}); }
-        catch(e){ console.warn("image embed failed",e); }
-      }
-      col++;
-      if(col===COLS) cursorY -= (IMG_H + GAP_Y);
-    }
-    cursorY -= 20;
-  }
+  cursorY -= IMG_H + GAP_Y;
+}
+
 
   const pdfBytes = await pdfDoc.save();
   const blob = new Blob([pdfBytes],{type:"application/pdf"});
