@@ -95,7 +95,19 @@ export default async function generatePdf(data, images=[]){
     ["MFG DATE", data.mfg_date || ""],
     ["SURVEY DATE", data.survey_date || ""]
   ];
-  for(const [label,value] of details){ ensureSpace(lineHeight); const labelText = label + " "; const wLabel = helveticaBold.widthOfTextAtSize(labelText,8); drawLine(labelText,LEFT,cursorY,{font:helveticaBold,size:8}); drawLine(String(value),LEFT + wLabel,cursorY,{font:helvetica,size:8}); cursorY -= lineHeight; }
+  for (const [label, value] of details) {
+  if (!value || value.trim() === "") continue;  // ⛔ skip empty fields
+
+  ensureSpace(lineHeight);
+  const labelText = label + " ";
+  const wLabel = helveticaBold.widthOfTextAtSize(labelText, 8);
+
+  drawLine(labelText, LEFT, cursorY, { font: helveticaBold, size: 8 });
+  drawLine(String(value), LEFT + wLabel, cursorY, { font: helvetica, size: 8 });
+
+  cursorY -= lineHeight;
+}
+
   cursorY -= 6;
 
   // observations
@@ -104,6 +116,7 @@ export default async function generatePdf(data, images=[]){
   cursorY -= lineHeight;
   for(let i=0;i<(data.observations||[]).length;i++){
     const o = data.observations[i];
+    if (!o.status || o.status.trim() === "") continue;
     const leftText = `${i+1}. ${o.label}`;
     const rightText = o.status || "";
     const leftLines = wrapText(leftText,helvetica,8,usableWidth*0.65);
