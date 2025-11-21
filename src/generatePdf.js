@@ -123,7 +123,7 @@ cursorY -= lineHeight + 10;
 // TABLE DIMENSIONS
 const col1W = 30;     // SL NO
 const col2W = 300;    // Observation Label
-const col3W = 140;    // Status
+const col3W = 80;    // Status
 const rowH = 16;
 
 // HEADER
