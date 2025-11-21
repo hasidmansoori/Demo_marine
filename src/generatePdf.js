@@ -110,56 +110,100 @@ export default async function generatePdf(data, images=[]){
 
   cursorY -= 6;
 
-// ---------------------------------------------
-// TABLE: SURVEY OBSERVATION
-// ---------------------------------------------
+// --------------------------------------------------
+// TABLE: SURVEY OBSERVATION (WITH FULL DIVIDERS)
+// --------------------------------------------------
 ensureSpace(lineHeight + 10);
-drawLine("SURVEY OBSERVATION :-", LEFT, cursorY, { font: helveticaBold, size: 10 });
+drawLine("SURVEY OBSERVATION :-", LEFT, cursorY, {
+  font: helveticaBold,
+  size: 10
+});
 cursorY -= lineHeight + 10;
 
-// TABLE SETTINGS
-const col1W = 30;         // SL NO.
-const col2W = 300;        // Observation Label
-const col3W = 140;        // Status
-const rowH  = 18;
+// TABLE DIMENSIONS
+const col1W = 30;     // SL NO
+const col2W = 300;    // Observation Label
+const col3W = 140;    // Status
+const rowH = 18;
 
-// TABLE HEADER
+// HEADER DRAW FUNCTION
 function drawTableHeader() {
   ensureSpace(rowH);
-  page.drawRectangle({ x: LEFT, y: cursorY - rowH, width: col1W + col2W + col3W, height: rowH, borderColor: rgb(0,0,0), borderWidth: 1 });
 
-  page.drawText("SL", { x: LEFT + 5, y: cursorY - 12, size: 8 });
-  page.drawText("OBSERVATION", { x: LEFT + col1W + 5, y: cursorY - 12, size: 8 });
-  page.drawText("STATUS", { x: LEFT + col1W + col2W + 5, y: cursorY - 12, size: 8 });
+  // full header box
+  page.drawRectangle({
+    x: LEFT,
+    y: cursorY - rowH,
+    width: col1W + col2W + col3W,
+    height: rowH,
+    borderColor: rgb(0, 0, 0),
+    borderWidth: 1
+  });
+
+  // vertical dividers
+  page.drawLine({
+    start: { x: LEFT + col1W, y: cursorY },
+    end: { x: LEFT + col1W, y: cursorY - rowH },
+    thickness: 1,
+    color: rgb(0, 0, 0)
+  });
+
+  page.drawLine({
+    start: { x: LEFT + col1W + col2W, y: cursorY },
+    end: { x: LEFT + col1W + col2W, y: cursorY - rowH },
+    thickness: 1,
+    color: rgb(0, 0, 0)
+  });
+
+  // header text
+  page.drawText("SL", {
+    x: LEFT + 5,
+    y: cursorY - 12,
+    size: 8,
+    font: helveticaBold
+  });
+
+  page.drawText("OBSERVATION", {
+    x: LEFT + col1W + 5,
+    y: cursorY - 12,
+    size: 8,
+    font: helveticaBold
+  });
+
+  page.drawText("STATUS", {
+    x: LEFT + col1W + col2W + 5,
+    y: cursorY - 12,
+    size: 8,
+    font: helveticaBold
+  });
 
   cursorY -= rowH;
 }
 
 drawTableHeader();
 
-// TABLE ROWS
 let rowIndex = 1;
 
 for (let i = 0; i < data.observations.length; i++) {
   const o = data.observations[i];
 
-  // Skip empty status rows
-  if (!o.status || o.status.trim() === "") continue;
+  // Skip completely blank rows
+  if (!o.status && !o.label) continue;
 
-  const labelLines = wrapText(o.label, helvetica, 8, col2W - 10);
-  const statusLines = wrapText(o.status, helveticaBold, 8, col3W - 10);
+  const leftLines = wrapText(o.label, helvetica, 8, col2W - 10);
+  const statusLines = wrapText(o.status || "", helveticaBold, 8, col3W - 10);
 
-  const maxLines = Math.max(labelLines.length, statusLines.length);
+  const maxLines = Math.max(leftLines.length, statusLines.length);
   const blockHeight = maxLines * rowH;
 
-  // Page break if needed
+  // PAGE BREAK
   if (cursorY - blockHeight < BOTTOM_LIMIT) {
     page = createPage();
     cursorY = pageHeight - TOP_START;
     drawTableHeader();
   }
 
-  // Draw Row Box
+  // ---- OUTER ROW RECTANGLE ----
   page.drawRectangle({
     x: LEFT,
     y: cursorY - blockHeight,
@@ -169,35 +213,53 @@ for (let i = 0; i < data.observations.length; i++) {
     borderWidth: 1
   });
 
-  // Col 1 → Serial No.
+  // ---- VERTICAL LINES ----
+  page.drawLine({
+    start: { x: LEFT + col1W, y: cursorY },
+    end: { x: LEFT + col1W, y: cursorY - blockHeight },
+    thickness: 1,
+    color: rgb(0, 0, 0)
+  });
+
+  page.drawLine({
+    start: { x: LEFT + col1W + col2W, y: cursorY },
+    end: { x: LEFT + col1W + col2W, y: cursorY - blockHeight },
+    thickness: 1,
+    color: rgb(0, 0, 0)
+  });
+
+  // ---- SL NUMBER ----
   page.drawText(String(rowIndex), {
     x: LEFT + 5,
     y: cursorY - 12,
-    size: 8
+    size: 8,
+    font: helvetica
   });
 
-  // Col 2 → Observation Label
-  for (let l = 0; l < labelLines.length; l++) {
-    page.drawText(labelLines[l], {
+  // ---- OBSERVATION LABEL (multi-line) ----
+  leftLines.forEach((line, li) => {
+    page.drawText(line, {
       x: LEFT + col1W + 5,
-      y: cursorY - 12 - (l * rowH),
-      size: 8
+      y: cursorY - 12 - li * rowH,
+      size: 8,
+      font: helvetica
     });
-  }
+  });
 
-  // Col 3 → Status
-  for (let l = 0; l < statusLines.length; l++) {
-    page.drawText(statusLines[l], {
+  // ---- STATUS (multi-line, bold) ----
+  statusLines.forEach((line, li) => {
+    page.drawText(line, {
       x: LEFT + col1W + col2W + 5,
-      y: cursorY - 12 - (l * rowH),
+      y: cursorY - 12 - li * rowH,
       size: 8,
       font: helveticaBold
     });
-  }
+  });
 
   cursorY -= blockHeight;
   rowIndex++;
 }
+
 
 
   // remarks
