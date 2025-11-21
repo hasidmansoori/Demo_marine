@@ -111,7 +111,7 @@ export default async function generatePdf(data, images=[]){
   cursorY -= 6;
 
 // --------------------------------------------------
-// TABLE: SURVEY OBSERVATION (WITH FULL DIVIDERS)
+// TABLE: SURVEY OBSERVATION (WITH ALL DIVIDER LINES)
 // --------------------------------------------------
 ensureSpace(lineHeight + 10);
 drawLine("SURVEY OBSERVATION :-", LEFT, cursorY, {
@@ -124,55 +124,65 @@ cursorY -= lineHeight + 10;
 const col1W = 30;     // SL NO
 const col2W = 300;    // Observation Label
 const col3W = 140;    // Status
-const rowH = 18;
+const rowH = 16;
 
-// HEADER DRAW FUNCTION
+// HEADER
 function drawTableHeader() {
   ensureSpace(rowH);
 
-  // full header box
+  const tableTotalWidth = col1W + col2W + col3W;
+
+  // outer header box
   page.drawRectangle({
     x: LEFT,
     y: cursorY - rowH,
-    width: col1W + col2W + col3W,
+    width: tableTotalWidth,
     height: rowH,
     borderColor: rgb(0, 0, 0),
     borderWidth: 1
   });
 
-  // vertical dividers
+  // vertical lines
   page.drawLine({
     start: { x: LEFT + col1W, y: cursorY },
-    end: { x: LEFT + col1W, y: cursorY - rowH },
+    end:   { x: LEFT + col1W, y: cursorY - rowH },
     thickness: 1,
-    color: rgb(0, 0, 0)
+    color: rgb(0,0,0)
   });
 
   page.drawLine({
     start: { x: LEFT + col1W + col2W, y: cursorY },
-    end: { x: LEFT + col1W + col2W, y: cursorY - rowH },
+    end:   { x: LEFT + col1W + col2W, y: cursorY - rowH },
     thickness: 1,
-    color: rgb(0, 0, 0)
+    color: rgb(0,0,0)
   });
 
-  // header text
+  // FINAL RIGHT BORDER (Ending line)
+  page.drawLine({
+    start: { x: LEFT + tableTotalWidth, y: cursorY },
+    end:   { x: LEFT + tableTotalWidth, y: cursorY - rowH },
+    thickness: 1,
+    color: rgb(0,0,0)
+  });
+
+  // text
   page.drawText("SL", {
     x: LEFT + 5,
-    y: cursorY - 12,
+    y: cursorY - 11,
     size: 8,
     font: helveticaBold
   });
 
   page.drawText("OBSERVATION", {
     x: LEFT + col1W + 5,
-    y: cursorY - 12,
+    y: cursorY - 11,
     size: 8,
     font: helveticaBold
   });
 
   page.drawText("STATUS", {
     x: LEFT + col1W + col2W + 5,
-    y: cursorY - 12,
+    y: cursorY - 11,
     size: 8,
     font: helveticaBold
   });
@@ -185,72 +195,84 @@ drawTableHeader();
 let rowIndex = 1;
 
 for (let i = 0; i < data.observations.length; i++) {
+
   const o = data.observations[i];
 
-  // Skip completely blank rows
-  if (!o.status && !o.label) continue;
+  // -------------------------------
+  // Skip empty rows (NO status = skip)
+  // -------------------------------
+  if (!o.status || o.status.trim() === "") continue;
 
   const leftLines = wrapText(o.label, helvetica, 8, col2W - 10);
-  const statusLines = wrapText(o.status || "", helveticaBold, 8, col3W - 10);
-
+  const statusLines = wrapText(o.status, helveticaBold, 8, col3W - 10);
   const maxLines = Math.max(leftLines.length, statusLines.length);
   const blockHeight = maxLines * rowH;
 
-  // PAGE BREAK
+  // page break
   if (cursorY - blockHeight < BOTTOM_LIMIT) {
     page = createPage();
     cursorY = pageHeight - TOP_START;
     drawTableHeader();
   }
 
-  // ---- OUTER ROW RECTANGLE ----
+  const tableTotalWidth = col1W + col2W + col3W;
+
+  // ROW OUTER BORDER
   page.drawRectangle({
     x: LEFT,
     y: cursorY - blockHeight,
-    width: col1W + col2W + col3W,
+    width: tableTotalWidth,
     height: blockHeight,
     borderColor: rgb(0, 0, 0),
     borderWidth: 1
   });
 
-  // ---- VERTICAL LINES ----
+  // Vertical borders
   page.drawLine({
     start: { x: LEFT + col1W, y: cursorY },
-    end: { x: LEFT + col1W, y: cursorY - blockHeight },
+    end:   { x: LEFT + col1W, y: cursorY - blockHeight },
     thickness: 1,
-    color: rgb(0, 0, 0)
+    color: rgb(0,0,0)
   });
 
   page.drawLine({
     start: { x: LEFT + col1W + col2W, y: cursorY },
-    end: { x: LEFT + col1W + col2W, y: cursorY - blockHeight },
+    end:   { x: LEFT + col1W + col2W, y: cursorY - blockHeight },
     thickness: 1,
-    color: rgb(0, 0, 0)
+    color: rgb(0,0,0)
   });
 
-  // ---- SL NUMBER ----
+  // FINAL RIGHT BORDER
+  page.drawLine({
+    start: { x: LEFT + tableTotalWidth, y: cursorY },
+    end:   { x: LEFT + tableTotalWidth, y: cursorY - blockHeight },
+    thickness: 1,
+    color: rgb(0,0,0)
+  });
+
+  // SL No
   page.drawText(String(rowIndex), {
     x: LEFT + 5,
-    y: cursorY - 12,
+    y: cursorY - 11,
     size: 8,
     font: helvetica
   });
 
-  // ---- OBSERVATION LABEL (multi-line) ----
+  // Observation text
   leftLines.forEach((line, li) => {
     page.drawText(line, {
       x: LEFT + col1W + 5,
-      y: cursorY - 12 - li * rowH,
+      y: cursorY - 11 - li * rowH,
       size: 8,
       font: helvetica
     });
   });
 
-  // ---- STATUS (multi-line, bold) ----
+  // Status text
   statusLines.forEach((line, li) => {
     page.drawText(line, {
       x: LEFT + col1W + col2W + 5,
-      y: cursorY - 12 - li * rowH,
+      y: cursorY - 11 - li * rowH,
       size: 8,
       font: helveticaBold
     });
@@ -259,6 +281,7 @@ for (let i = 0; i < data.observations.length; i++) {
   cursorY -= blockHeight;
   rowIndex++;
 }
+
 
 
 
