@@ -110,26 +110,95 @@ export default async function generatePdf(data, images=[]){
 
   cursorY -= 6;
 
-  // observations
-  ensureSpace(lineHeight);
-  drawLine("SURVEY OBSERVATION :-",LEFT,cursorY,{font:helveticaBold,size:9});
-  cursorY -= lineHeight;
-  for(let i=0;i<(data.observations||[]).length;i++){
-    const o = data.observations[i];
-    if (!o.status || o.status.trim() === "") continue;
-    const leftText = `${i+1}. ${o.label}`;
-    const rightText = o.status || "";
-    const leftLines = wrapText(leftText,helvetica,8,usableWidth*0.65);
-    for(let li=0;li<leftLines.length;li++){
-      ensureSpace(lineHeight);
-      drawLine(leftLines[li],LEFT,cursorY,{font:helvetica,size:8});
-      if(li===0 && rightText){
-        const sw = helveticaBold.widthOfTextAtSize(rightText,8);
-        drawLine(rightText,pageWidth - RIGHT - sw,cursorY,{font:helveticaBold,size:8});
-      }
-      cursorY -= lineHeight;
-    }
+// ---------------------------------------------
+// TABLE: SURVEY OBSERVATION
+// ---------------------------------------------
+ensureSpace(lineHeight + 10);
+drawLine("SURVEY OBSERVATION :-", LEFT, cursorY, { font: helveticaBold, size: 10 });
+cursorY -= lineHeight + 10;
+
+// TABLE SETTINGS
+const col1W = 30;         // SL NO.
+const col2W = 300;        // Observation Label
+const col3W = 140;        // Status
+const rowH  = 18;
+
+// TABLE HEADER
+function drawTableHeader() {
+  ensureSpace(rowH);
+  page.drawRectangle({ x: LEFT, y: cursorY - rowH, width: col1W + col2W + col3W, height: rowH, borderColor: rgb(0,0,0), borderWidth: 1 });
+
+  page.drawText("SL", { x: LEFT + 5, y: cursorY - 12, size: 8 });
+  page.drawText("OBSERVATION", { x: LEFT + col1W + 5, y: cursorY - 12, size: 8 });
+  page.drawText("STATUS", { x: LEFT + col1W + col2W + 5, y: cursorY - 12, size: 8 });
+
+  cursorY -= rowH;
+}
+
+drawTableHeader();
+
+// TABLE ROWS
+let rowIndex = 1;
+
+for (let i = 0; i < data.observations.length; i++) {
+  const o = data.observations[i];
+
+  // Skip empty status rows
+  if (!o.status || o.status.trim() === "") continue;
+
+  const labelLines = wrapText(o.label, helvetica, 8, col2W - 10);
+  const statusLines = wrapText(o.status, helveticaBold, 8, col3W - 10);
+
+  const maxLines = Math.max(labelLines.length, statusLines.length);
+  const blockHeight = maxLines * rowH;
+
+  // Page break if needed
+  if (cursorY - blockHeight < BOTTOM_LIMIT) {
+    page = createPage();
+    cursorY = pageHeight - TOP_START;
+    drawTableHeader();
   }
+
+  // Draw Row Box
+  page.drawRectangle({
+    x: LEFT,
+    y: cursorY - blockHeight,
+    width: col1W + col2W + col3W,
+    height: blockHeight,
+    borderColor: rgb(0, 0, 0),
+    borderWidth: 1
+  });
+
+  // Col 1 → Serial No.
+  page.drawText(String(rowIndex), {
+    x: LEFT + 5,
+    y: cursorY - 12,
+    size: 8
+  });
+
+  // Col 2 → Observation Label
+  for (let l = 0; l < labelLines.length; l++) {
+    page.drawText(labelLines[l], {
+      x: LEFT + col1W + 5,
+      y: cursorY - 12 - (l * rowH),
+      size: 8
+    });
+  }
+
+  // Col 3 → Status
+  for (let l = 0; l < statusLines.length; l++) {
+    page.drawText(statusLines[l], {
+      x: LEFT + col1W + col2W + 5,
+      y: cursorY - 12 - (l * rowH),
+      size: 8,
+      font: helveticaBold
+    });
+  }
+
+  cursorY -= blockHeight;
+  rowIndex++;
+}
+
 
   // remarks
   cursorY -= 6;
@@ -141,13 +210,30 @@ export default async function generatePdf(data, images=[]){
   cursorY -= 8;
 
   // footer
-  const foot = [
-    `Shipper: ${data.shipper || ""}`,
-    `A/C: ${data.ac || ""}`,
-    `Issued Without Prejudice`,
-    `${data.issued_for || ""}`
-  ];
-  for(const t of foot){ ensureSpace(lineHeight); drawLine(t,LEFT,cursorY,{font:helvetica,size:8}); cursorY -= lineHeight; }
+  // FOOTER SECTION
+const issuedFor = data.issued_for || "";
+
+// Shipper
+if (data.shipper && data.shipper.trim() !== "") {
+  ensureSpace(lineHeight);
+  drawLine(`Shipper: ${data.shipper}`, LEFT, cursorY, { size: 8, font: helvetica });
+  cursorY -= lineHeight;
+}
+
+
+
+// Issued Without Prejudice
+ensureSpace(lineHeight);
+drawLine("Issued Without Prejudice", LEFT, cursorY, { size: 8, font: helvetica });
+cursorY -= lineHeight;
+
+// ISSUED FOR (Bold + Big)
+if (issuedFor.trim() !== "") {
+  ensureSpace(18);
+  drawLine(issuedFor, LEFT, cursorY, { size: 12, font: helveticaBold });
+  cursorY -= 18;
+}
+
 
   // signature
   const sigW = 180; const sigH = 90;
